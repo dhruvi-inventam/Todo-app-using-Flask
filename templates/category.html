@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h4 class="mb-4">{{ category }} Tasks</h4>
+
+{% if tasks %}
+{% for task in tasks %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">{{ task.title }}</h5>
+        <p class="card-text">{{ task.description }}</p>
+        <p class="mb-1">
+            <span class="badge bg-info text-dark">{{ task.category }}</span>
+            <span class="badge 
+                    {% if task.priority == 'High' %}bg-danger
+                    {% elif task.priority == 'Medium' %}bg-warning text-dark
+                    {% else %}bg-success{% endif %}">
+                {{ task.priority }}
+            </span>
+        </p>
+        <!-- <p class="text-muted small">{{ task.created_at.strftime('%Y-%m-%d %H:%M') }}</p> -->
+        {% if task.due_date %}
+        <p class="text-danger small">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</p>
+        {% endif %}
+        <form action="{{ url_for('mark_complete', id=task.id) }}" method="POST" style="display:inline;">
+            <button class="btn btn-sm btn-success">✔ Done</button>
+        </form>
+        
+        <a href="{{ url_for('update', id=task.id) }}" class="btn btn-sm btn-warning">Edit</a>
+        <a href="{{ url_for('delete', id=task.id) }}" class="btn btn-sm btn-danger">Delete</a>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<p>No {{ category.lower() }} tasks found.</p>
+{% endif %}
+{% endblock %}

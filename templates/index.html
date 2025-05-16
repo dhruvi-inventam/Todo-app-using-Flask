@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- =======================
+     Header + Date Picker
+======================== -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">
+    Tasks for <span class="text-primary">{{ selected_date.strftime('%B %d, %Y') }}</span>
+  </h4>
+  <div class="d-flex align-items-center">
+    <label for="datePicker" class="me-2 fw-semibold">Select Date:</label>
+    <input type="date" class="form-control form-control-sm" id="datePicker"
+           value="{{ selected_date.strftime('%Y-%m-%d') }}">
+  </div>
+</div>
+
+<div class="row">
+  <!-- =======================
+       Left Panel: Add Task
+  ========================= -->
+  <div class="col-md-5 mb-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">➕ Add New Task</h5>
+        <form method="POST" action="{{ url_for('add') }}">
+          <div class="mb-3">
+            <input type="text" name="title" class="form-control" placeholder="Task Title" required>
+          </div>
+          <div class="mb-3">
+            <textarea name="description" class="form-control" rows="3" placeholder="Task Description"></textarea>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">Priority</label>
+              <select name="priority" class="form-select" required>
+                <option value="High">High</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Category</label>
+              <select name="category" class="form-select" required>
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Other" selected>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Due Date & Time</label>
+            <input type="datetime-local" name="due_date" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Reminder Time</label>
+            <input type="datetime-local" name="reminder_time" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-success w-100">Add Task</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =======================
+       Right Panel: Task List
+  ========================= -->
+  <div class="col-md-7">
+    <!-- Filter Tabs -->
+    <ul class="nav nav-pills mb-3">
+      <li class="nav-item"><a class="nav-link {% if active_tab == 'today' %}active{% endif %}" href="{{ url_for('index') }}">Today</a></li>
+      <li class="nav-item"><a class="nav-link {% if active_tab == 'all' %}active{% endif %}" href="{{ url_for('all_tasks') }}">All</a></li>
+      <li class="nav-item"><a class="nav-link {% if active_tab == 'upcoming' %}active{% endif %}" href="{{ url_for('upcoming_tasks') }}">Upcoming</a></li>
+      <li class="nav-item"><a class="nav-link {% if active_tab == 'completed' %}active{% endif %}" href="{{ url_for('completed_tasks') }}">Completed</a></li>
+      <li class="nav-item"><a class="nav-link {% if active_tab == 'overdue' %}active{% endif %}" href="{{ url_for('overdue_tasks') }}">Overdue</a></li>
+    </ul>
+
+    <!-- Sort Dropdown -->
+    <div class="mb-3 d-flex justify-content-end">
+      <form id="sortForm">
+        <select name="sort" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+          <option disabled selected>Sort by</option>
+          <option value="due_date_asc">Due Date ↑</option>
+          <option value="due_date_desc">Due Date ↓</option>
+          <option value="priority">Priority (High → Low)</option>
+        </select>
+      </form>
+    </div>
+
+    <h5>Your Tasks</h5>
+
+    {% if tasks %}
+      {% for task in tasks %}
+      <div class="card mb-3 shadow-sm 
+        {% if task.due_date and not task.completed and task.due_date < now %}
+          border border-danger
+        {% endif %}">
+        <div class="card-body">
+
+          <!-- Title + Completion -->
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title">{{ task.title }}</h5>
+            {% if not task.completed %}
+            <form action="{{ url_for('mark_complete', id=task.id) }}" method="POST" style="display:inline;">
+              <button class="btn btn-sm btn-outline-success">✔ Done</button>
+            </form>
+            {% else %}
+            <span class="badge bg-secondary">Completed</span>
+            {% endif %}
+          </div>
+
+          <!-- Description -->
+          {% if task.description %}
+            <p class="card-text mt-2">{{ task.description }}</p>
+          {% endif %}
+
+          <!-- Labels -->
+          <div class="mb-2">
+            <span class="badge bg-info text-dark me-1">📂 {{ task.category }}</span>
+            <span class="badge 
+              {% if task.priority == 'High' %}bg-danger
+              {% elif task.priority == 'Medium' %}bg-warning text-dark
+              {% else %}bg-success{% endif %}">
+              🔥 {{ task.priority }}
+            </span>
+            {% if task.due_date and not task.completed and task.due_date < now %}
+              <span class="badge bg-danger ms-2">⚠️ Overdue</span>
+            {% endif %}
+          </div>
+
+          <!-- Dates -->
+          {% if task.due_date %}
+          <p class="text-danger small">📅 Due: {{ task.due_date.strftime('%Y-%m-%d %H:%M') }}</p>
+          {% endif %}
+          {% if task.reminder_time %}
+          <p class="text-info small">⏰ Reminder: {{ task.reminder_time.strftime('%Y-%m-%d %H:%M') }}</p>
+          {% endif %}
+
+          <!-- Actions -->
+          <a href="{{ url_for('update', id=task.id) }}" class="btn btn-sm btn-warning">Edit</a>
+          <a href="{{ url_for('delete', id=task.id) }}" class="btn btn-sm btn-danger">Delete</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p>No tasks found. Start by adding one.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- =======================
+     Script: Handle Date Selection
+======================== -->
+<script>
+  document.getElementById('datePicker')?.addEventListener('change', function () {
+    const selected = this.value;
+    if (selected) {
+      window.location.href = '/date/' + selected;
+    }
+  });
+</script>
+
+{% endblock %}

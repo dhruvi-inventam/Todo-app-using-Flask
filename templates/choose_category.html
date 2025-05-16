@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Choose Category{% endblock title %}
+{% block body %}
+<div class="container my-5">
+    <div class="card shadow-sm rounded-4 p-4">
+        <h2 class="mb-3">👋 Welcome! What will you use this Todo app for?</h2>
+        <form action="/set_category" method="POST">
+            <div class="mb-3">
+                <select class="form-select" name="category" required>
+                    <option value="" selected disabled>Select Category</option>
+                    <option value="Personal">🧍 Personal Use</option>
+                    <option value="Work">💼 Work</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Continue</button>
+        </form>
+    </div>
+</div>
+{% endblock body %}
